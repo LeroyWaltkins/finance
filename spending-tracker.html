@@ -151,7 +151,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const CATEGORIES = ['Food','Fun','Transportation','Bills','Rent','Travel','Gifts','Mistakes','Other'];
+const CATEGORIES = ['Food','Fun','Transportation','Bills','Rent','Travel','Gifts','Gear','Mistakes','Other'];
 
 // ── Keyword parser (fully offline) ────────────────────────────────────────────
 function parseNote(text) {
@@ -190,6 +190,7 @@ function parseNote(text) {
     ['Rent',           /\b(rent|mortgage|landlord|accommodation|housing)\b/],
     ['Travel',         /\b(travel|hotel|airbnb|holiday|vacation|trip|flight|airport|luggage|suitcase)\b/],
     ['Gifts',          /\b(gift|gifts|present|birthday|christmas|flowers|donation)\b/],
+    ['Gear',           /\b(gear|equipment|gadget|gadgets|tool|tools|device|devices|tech|hardware|accessory|accessories|kit|camera|lens|cable|charger|headphones|keyboard|mouse|monitor|bag|backpack|clothing|clothes|shoes|jacket|watch)\b/],
     ['Mistakes',       /\b(mistake|mistakes|regret|wasted|oops|accident|accidental|wrong)\b/],
   ];
   for (const [cat, re] of catMap) {
