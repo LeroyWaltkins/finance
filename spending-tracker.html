@@ -144,8 +144,8 @@ function parseNote(text) {
   // Description: remove amount, currency, keywords — what's left
   let desc = text
     .replace(/[€$£]\s*\d+(?:[.,]\d{1,2})?/g, '')
-    .replace(/\d+(?:[.,]\d{1,2})?\s*(?:euro|euros|eur|usd|dollars?)?/gi, '')
-    .replace(/\b(must|need|essential|necessary|nice|optional|treat|cut|waste|unnecessary|mistake|one.?time|once|single|recurring|repeat|monthly|weekly|daily|every|food|fun|transport(?:ation)?|bills?|rent|travel|gift|gifts|mistakes?|other|spent?|spend|on|a|an|the|it|was|is)\b/gi, '')
+    .replace(/\d+(?:[.,]\d{1,2})?\s*(?:euros?|eur|usd|dollars?|cents?)?/gi, '')
+    .replace(/\b(must|need|essential|necessary|nice|optional|treat|cut|waste|unnecessary|mistake|one.?time|once|single|recurring|repeat|monthly|weekly|daily|every|food|fun|transport(?:ation)?|bills?|rent|travel|gift|gifts|mistakes?|other|spent?|spend|on|a|an|the|it|was|is|to|have|had|got|get|bought|buy|for|my|me)\b/gi, '')
     .replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
   if (!desc) desc = 'Purchase';
 
