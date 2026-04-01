@@ -19,7 +19,7 @@
   .header h1 { font-family: var(--mono); font-size: 18px; font-weight: 500; letter-spacing: -0.5px; }
   .header .month { font-family: var(--mono); font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 
-  .summary { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border); }
+  .summary { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--border); }
   .summary-item { padding: 14px 16px; border-right: 1px solid var(--border); }
   .summary-item:last-child { border-right: none; }
   .summary-item .label { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 4px; }
@@ -114,7 +114,7 @@
 </div>
 
 <div class="summary">
-  <div class="summary-item must"><div class="label">Must</div><div class="amount" id="mustTotal">€0.00</div></div>
+  <div class="summary-item" style="border-right:1px solid var(--border);"><div class="label">Total</div><div class="amount" id="grandTotal" style="color:var(--text);">€0.00</div></div><div class="summary-item must"><div class="label">Must</div><div class="amount" id="mustTotal">€0.00</div></div>
   <div class="summary-item nice"><div class="label">Nice</div><div class="amount" id="niceTotal">€0.00</div></div>
   <div class="summary-item cut"><div class="label">Cut</div><div class="amount" id="cutTotal">€0.00</div></div>
 </div>
@@ -146,6 +146,7 @@
   <button class="filter-btn" data-sort="recurring">Recurring</button>
 </div>
 
+<div style="padding:8px 16px;border-bottom:1px solid var(--border);"><select id="monthFilter" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:0.8px;outline:none;" onchange="render()"><option value="all">All months</option></select></div>
 <div class="entries" id="entriesList"></div>
 <div class="toast" id="toast"></div>
 
@@ -217,7 +218,7 @@ function showToast(msg, duration = 2500) {
 
 // ── Preview UI ────────────────────────────────────────────────────────────────
 function showPreview(parsed) {
-  pendingEntry = { ...parsed, id: Date.now() };
+  pendingEntry = { ...parsed, id: Date.now(), date: new Date().toISOString() };
   const preview = document.getElementById('preview');
   preview.style.display = 'block';
   renderPreviewTags();
@@ -286,7 +287,13 @@ function submitNote() {
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function getSorted() {
-  let list = [...entries];
+  const monthVal = document.getElementById('monthFilter') ? document.getElementById('monthFilter').value : 'all';
+  let list = entries.filter(e => {
+    if (monthVal === 'all') return true;
+    if (!e.date) return true;
+    const d = new Date(e.date);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` === monthVal;
+  });
   if (currentSort === 'amount-desc') list.sort((a,b) => b.amount - a.amount);
   else if (currentSort === 'amount-asc') list.sort((a,b) => a.amount - b.amount);
   else if (currentSort === 'must') list = list.filter(e => e.priority==='must').sort((a,b) => b.amount-a.amount);
@@ -298,12 +305,30 @@ function getSorted() {
 }
 
 function render() {
+  // Populate month dropdown
+  const sel = document.getElementById('monthFilter');
+  if (sel) {
+    const current = sel.value;
+    const months = [...new Set(entries.filter(e=>e.date).map(e => {
+      const d = new Date(e.date);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    }))].sort().reverse();
+    sel.innerHTML = '<option value="all">All months</option>' + months.map(m => {
+      const [y, mo] = m.split('-');
+      const label = new Date(y, mo-1).toLocaleString('default', {month:'long', year:'numeric'});
+      return `<option value="${m}" ${m===current?'selected':''}>${label}</option>`;
+    }).join('');
+  }
+
+  const filtered = getSorted();
   const must = entries.filter(e=>e.priority==='must').reduce((s,e)=>s+e.amount,0);
   const nice = entries.filter(e=>e.priority==='nice').reduce((s,e)=>s+e.amount,0);
   const cut  = entries.filter(e=>e.priority==='cut').reduce((s,e)=>s+e.amount,0);
-  document.getElementById('mustTotal').textContent = '€'+must.toFixed(2);
-  document.getElementById('niceTotal').textContent = '€'+nice.toFixed(2);
-  document.getElementById('cutTotal').textContent  = '€'+cut.toFixed(2);
+  const total = must + nice + cut;
+  document.getElementById('grandTotal').textContent = '€'+total.toFixed(2);
+  document.getElementById('mustTotal').textContent  = '€'+must.toFixed(2);
+  document.getElementById('niceTotal').textContent  = '€'+nice.toFixed(2);
+  document.getElementById('cutTotal').textContent   = '€'+cut.toFixed(2);
 
   const list = getSorted();
   const container = document.getElementById('entriesList');
@@ -319,6 +344,7 @@ function render() {
       </div>
       <div class="entry-body">
         <div class="entry-desc">${e.description}</div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px;">${e.date ? new Date(e.date).toLocaleDateString("en-IE", {day:"numeric",month:"short",year:"numeric"}) : ""}</div>
         <div class="entry-meta">
           <span class="tag">${e.priority==='must'?'Must':e.priority==='nice'?'Nice':'Cut'}</span>
           <span class="tag">${e.recurrence}</span>
@@ -345,11 +371,49 @@ document.getElementById('copyBtn').addEventListener('click', () => {
   const cut  = entries.filter(e=>e.priority==='cut').reduce((s,e)=>s+e.amount,0);
   const total = must + nice + cut;
 
-  const lines = entries.map(e =>
-    `- €${e.amount.toFixed(2)} | ${e.description} | ${e.priority} | ${e.recurrence} | ${e.category}`
-  ).join('\n');
+  const mustAmt  = entries.filter(e=>e.priority==='must').reduce((s,e)=>s+e.amount,0);
+  const niceAmt  = entries.filter(e=>e.priority==='nice').reduce((s,e)=>s+e.amount,0);
+  const cutAmt   = entries.filter(e=>e.priority==='cut').reduce((s,e)=>s+e.amount,0);
+  const totalAmt = mustAmt + niceAmt + cutAmt;
 
-  const summary = `My spending log for ${month}:\n\nTotal: €${total.toFixed(2)}\nMust-haves: €${must.toFixed(2)}\nNice-to-haves: €${nice.toFixed(2)}\nCan cut: €${cut.toFixed(2)}\n\nEntries:\n${lines}`;
+  // Category breakdown
+  const catTotals = {};
+  entries.forEach(e => { catTotals[e.category] = (catTotals[e.category]||0) + e.amount; });
+  const catBreakdown = Object.entries(catTotals).sort((a,b)=>b[1]-a[1])
+    .map(([cat, amt]) => `  ${cat}: €${amt.toFixed(2)} (${Math.round(amt/totalAmt*100)}%)`)
+    .join('\n');
+
+  // Recurring vs one-time
+  const recurAmt = entries.filter(e=>e.recurrence==='recurring').reduce((s,e)=>s+e.amount,0);
+  const oneTimeAmt = entries.filter(e=>e.recurrence==='one-time').reduce((s,e)=>s+e.amount,0);
+
+  // Entries sorted by amount
+  const lines = [...entries].sort((a,b)=>b.amount-a.amount).map(e => {
+    const d = e.date ? new Date(e.date).toLocaleDateString('en-IE',{day:'numeric',month:'short'}) : '';
+    return `- €${e.amount.toFixed(2)} | ${e.description} | ${e.priority} | ${e.recurrence} | ${e.category}${d?' | '+d:''}`;
+  }).join('\n');
+
+  const summary = `SPENDING ANALYSIS REQUEST — ${month}
+
+OVERVIEW
+Total spent: €${totalAmt.toFixed(2)}
+Must-haves: €${mustAmt.toFixed(2)} (${Math.round(mustAmt/totalAmt*100)}%)
+Nice-to-haves: €${niceAmt.toFixed(2)} (${Math.round(niceAmt/totalAmt*100)}%)
+Can cut: €${cutAmt.toFixed(2)} (${Math.round(cutAmt/totalAmt*100)}%)
+Recurring: €${recurAmt.toFixed(2)} | One-time: €${oneTimeAmt.toFixed(2)}
+
+CATEGORY BREAKDOWN
+${catBreakdown}
+
+ALL ENTRIES (sorted by amount)
+${lines}
+
+Please analyse my spending and:
+1. Highlight any patterns or surprises
+2. Point out my biggest areas of discretionary spending
+3. Flag anything in the "can cut" category worth reconsidering
+4. Give me 2-3 practical suggestions to reduce spending next month
+5. Note any categories that seem high relative to the others`;
 
   navigator.clipboard.writeText(summary).then(() => {
     showToast('✓ Copied! Paste into Claude for analysis');
@@ -426,6 +490,10 @@ render();
     <div class="modal-field">
       <label>Category</label>
       <div class="modal-toggle-row" id="editCat"></div>
+    </div>
+    <div class="modal-field">
+      <label>Date</label>
+      <input type="date" id="editDate">
     </div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeEdit()">Cancel</button>
