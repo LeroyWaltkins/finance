@@ -157,10 +157,49 @@ const CATEGORIES = ['Food','Fun','Transportation','Bills','Rent','Travel','Gifts
 function parseNote(text) {
   const t = text.toLowerCase();
 
-  // Amount: find €/$/£ followed by number, or plain number with decimal
+  // Amount parsing — supports:
+  // "2.50", "2,50", "€2.50" → decimal
+  // "2 euros 50" / "2 euro 50 cents" → split
+  // "two fifty" / "9 fifty" → X.50 only if said with currency context or cents word
+  // plain "5" → integer
   let amount = 0;
-  const amtMatch = t.match(/[€$£]?\s*(\d+(?:[.,]\d{1,2})?)/);
-  if (amtMatch) amount = parseFloat(amtMatch[1].replace(',', '.'));
+
+  // 1. Decimal with optional currency symbol: €2.50 or 2.50 or 2,50
+  const decMatch = t.match(/[€$£]?\s*(\d+)[.,](\d{1,2})/);
+  if (decMatch) {
+    amount = parseFloat(decMatch[1] + '.' + decMatch[2]);
+  }
+
+  // 2. "X euro(s) Y" or "X euro(s) Y cent(s)" — explicit split
+  if (!amount) {
+    const splitMatch = t.match(/(\d+)\s*(?:euros?|€)\s*(\d+)?(?:\s*cents?)?/);
+    if (splitMatch) {
+      const euros = parseInt(splitMatch[1]) || 0;
+      const cents = splitMatch[2] ? parseInt(splitMatch[2]) : 0;
+      amount = euros + cents / 100;
+    }
+  }
+
+  // 3. "X fifty/cents" — only treat as X.50 if "cent" word present or currency mentioned nearby
+  if (!amount) {
+    const hasCurrencyContext = /euro|€|cent/.test(t);
+    const twoPartMatch = t.match(/(\d+)\s+(fifty|twenty|thirty|forty|sixty|seventy|eighty|ninety|\d{2})/);
+    if (twoPartMatch && hasCurrencyContext) {
+      const euros = parseInt(twoPartMatch[1]);
+      const cents = twoPartMatch[2] === 'fifty' ? 50 : twoPartMatch[2] === 'twenty' ? 20 :
+                    twoPartMatch[2] === 'thirty' ? 30 : twoPartMatch[2] === 'forty' ? 40 :
+                    twoPartMatch[2] === 'sixty' ? 60 : twoPartMatch[2] === 'seventy' ? 70 :
+                    twoPartMatch[2] === 'eighty' ? 80 : twoPartMatch[2] === 'ninety' ? 90 :
+                    parseInt(twoPartMatch[2]);
+      if (cents < 100) amount = euros + cents / 100;
+    }
+  }
+
+  // 4. Plain integer fallback
+  if (!amount) {
+    const intMatch = t.match(/(\d+)/);
+    if (intMatch) amount = parseInt(intMatch[1]);
+  }
 
   // Description: remove amount, currency, keywords — what's left
   let desc = text
