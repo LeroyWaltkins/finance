@@ -7,365 +7,116 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #242424;
-    --border: #2e2e2e;
-    --text: #e8e8e8;
-    --muted: #666;
-    --must: #4ade80;
-    --nice: #fbbf24;
-    --cut: #f87171;
-    --accent: #818cf8;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
+    --bg: #0f0f0f; --surface: #1a1a1a; --surface2: #242424;
+    --border: #2e2e2e; --text: #e8e8e8; --muted: #666;
+    --must: #4ade80; --nice: #fbbf24; --cut: #f87171; --accent: #818cf8;
+    --mono: 'DM Mono', monospace; --sans: 'DM Sans', sans-serif;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    min-height: 100vh;
-    padding: 0;
-    overflow-x: hidden;
-  }
+  .header { padding: 20px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: baseline; gap: 12px; }
+  .header h1 { font-family: var(--mono); font-size: 18px; font-weight: 500; letter-spacing: -0.5px; }
+  .header .month { font-family: var(--mono); font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
 
-  /* Header */
-  .header {
-    padding: 20px 20px 12px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-  }
-  .header h1 {
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: -0.5px;
-    color: var(--text);
-  }
-  .header .month {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
-
-  /* Summary bar */
-  .summary {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border-bottom: 1px solid var(--border);
-  }
-  .summary-item {
-    padding: 14px 16px;
-    border-right: 1px solid var(--border);
-  }
+  .summary { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--border); }
+  .summary-item { padding: 14px 16px; border-right: 1px solid var(--border); }
   .summary-item:last-child { border-right: none; }
-  .summary-item .label {
-    font-family: var(--mono);
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--muted);
-    margin-bottom: 4px;
-  }
-  .summary-item .amount {
-    font-family: var(--mono);
-    font-size: 16px;
-    font-weight: 500;
-  }
+  .summary-item .label { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 4px; }
+  .summary-item .amount { font-family: var(--mono); font-size: 16px; font-weight: 500; }
   .summary-item.must .amount { color: var(--must); }
   .summary-item.nice .amount { color: var(--nice); }
   .summary-item.cut .amount { color: var(--cut); }
 
-  /* Input area */
-  .input-area {
-    padding: 16px;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-  }
-  .input-row {
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-  }
-  .note-input {
-    flex: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 15px;
-    resize: none;
-    min-height: 48px;
-    max-height: 120px;
-    outline: none;
-    transition: border-color 0.2s;
-    line-height: 1.4;
-  }
+  .input-area { padding: 16px; border-bottom: 1px solid var(--border); }
+  .input-row { display: flex; gap: 8px; align-items: flex-end; }
+  .note-input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: var(--sans); font-size: 15px; resize: none; min-height: 48px; max-height: 120px; outline: none; transition: border-color 0.2s; line-height: 1.4; }
   .note-input:focus { border-color: var(--accent); }
   .note-input::placeholder { color: var(--muted); font-size: 14px; }
-
-  .mic-btn, .send-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    font-size: 20px;
-    transition: all 0.15s;
-  }
-  .mic-btn {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .mic-btn:active, .mic-btn.recording {
-    background: #3b0f0f;
-    border-color: var(--cut);
-    color: var(--cut);
-    transform: scale(0.96);
-  }
-  .send-btn {
-    background: var(--accent);
-    color: #fff;
-  }
+  .mic-btn, .send-btn { width: 48px; height: 48px; border-radius: 12px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 20px; transition: all 0.15s; }
+  .mic-btn { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .mic-btn.recording { background: #3b0f0f; border-color: var(--cut); color: var(--cut); }
+  .send-btn { background: var(--accent); color: #fff; }
   .send-btn:active { transform: scale(0.96); opacity: 0.9; }
-  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  .parsing-indicator {
-    display: none;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    padding: 8px 2px 0;
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  /* Parsed preview */
+  .preview { display: none; margin-top: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; }
+  .preview .preview-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .preview .ptag { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; padding: 3px 8px; border-radius: 5px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .preview .ptag.active-must { color: var(--must); border-color: var(--must); background: #052e16; }
+  .preview .ptag.active-nice { color: var(--nice); border-color: var(--nice); background: #2d1f02; }
+  .preview .ptag.active-cut  { color: var(--cut);  border-color: var(--cut);  background: #2d0a0a; }
+  .preview .ptag.active-cat  { color: var(--accent); border-color: var(--accent); background: #1e1b4b; }
+  .preview .ptag.active-rec  { color: #67e8f9; border-color: #67e8f9; background: #0a1f2d; }
+  .preview-label { font-family: var(--mono); font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .confirm-btn { margin-top: 10px; width: 100%; background: var(--accent); border: none; border-radius: 8px; padding: 10px; color: #fff; font-family: var(--sans); font-size: 14px; font-weight: 500; cursor: pointer; }
 
-  /* Sort/filter bar */
-  .filter-bar {
-    display: flex;
-    gap: 0;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
+  .filter-bar { display: flex; gap: 0; padding: 10px 16px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; }
   .filter-bar::-webkit-scrollbar { display: none; }
-  .filter-btn {
-    font-family: var(--mono);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 5px 12px;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s;
-  }
-  .filter-btn.active {
-    background: var(--surface2);
-    border-color: var(--border);
-    color: var(--text);
-  }
+  .filter-btn { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 12px; border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+  .filter-btn.active { background: var(--surface2); border-color: var(--border); color: var(--text); }
 
-  /* Entries list */
-  .entries {
-    padding: 8px 0 100px;
-  }
-
-  .entry {
-    display: grid;
-    grid-template-columns: 52px 1fr auto;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-    padding: 12px 16px;
-    animation: slideIn 0.25s ease-out;
-    position: relative;
-    align-items: start;
-  }
-  @keyframes slideIn {
-    from { opacity:0; transform: translateY(-6px); }
-    to   { opacity:1; transform: translateY(0); }
-  }
-
-  .entry-priority {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding-top: 2px;
-  }
-  .priority-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
+  .entries { padding: 8px 0 100px; }
+  .entry { display: grid; grid-template-columns: 52px 1fr auto; border-bottom: 1px solid var(--border); padding: 12px 16px; animation: slideIn 0.25s ease-out; position: relative; align-items: start; }
+  @keyframes slideIn { from { opacity:0; transform: translateY(-6px); } to { opacity:1; transform: translateY(0); } }
+  .entry-priority { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding-top: 2px; }
+  .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .priority-dot.must { background: var(--must); }
   .priority-dot.nice { background: var(--nice); }
   .priority-dot.cut  { background: var(--cut); }
-
-  .recur-tag {
-    font-family: var(--mono);
-    font-size: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--muted);
-  }
-
-  .entry-body { flex: 1; }
-  .entry-desc {
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.3;
-    margin-bottom: 4px;
-  }
-  .entry-meta {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .tag {
-    font-family: var(--mono);
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    background: var(--surface2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
+  .recur-tag { font-family: var(--mono); font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+  .entry-desc { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; margin-bottom: 4px; }
+  .entry-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .tag { font-family: var(--mono); font-size: 9px; text-transform: uppercase; letter-spacing: 0.8px; padding: 2px 7px; border-radius: 4px; background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
   .tag.category { color: var(--accent); border-color: #3730a3; background: #1e1b4b; }
-
-  .entry-amount {
-    font-family: var(--mono);
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text);
-    text-align: right;
-    padding-top: 2px;
-  }
-
-  .delete-btn {
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    background: none;
-    border: none;
-    color: var(--border);
-    cursor: pointer;
-    font-size: 11px;
-    padding: 4px;
-    border-radius: 4px;
-    transition: color 0.15s;
-  }
+  .entry-amount { font-family: var(--mono); font-size: 15px; font-weight: 500; color: var(--text); text-align: right; padding-top: 2px; }
+  .delete-btn { position: absolute; right: 8px; bottom: 8px; background: none; border: none; color: var(--border); cursor: pointer; font-size: 11px; padding: 4px; border-radius: 4px; transition: color 0.15s; }
   .delete-btn:hover { color: var(--cut); }
 
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--muted);
-  }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
   .empty-state .icon { font-size: 36px; margin-bottom: 12px; }
   .empty-state p { font-family: var(--mono); font-size: 12px; line-height: 1.8; }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 18px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--text);
-    transition: transform 0.3s ease;
-    z-index: 100;
-    white-space: nowrap;
-  }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 18px; font-family: var(--mono); font-size: 12px; color: var(--text); transition: transform 0.3s ease; z-index: 100; white-space: nowrap; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* Sort label */
-  .sort-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 10px 16px 4px;
-  }
-
-  @media (max-width: 400px) {
-    .summary-item .amount { font-size: 13px; }
-  }
+  /* Copy for Claude button */
+  .copy-bar { padding: 10px 16px; border-bottom: 1px solid var(--border); }
+  .copy-btn { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
 </style>
 </head>
 <body>
 
-
-<!-- API Key Setup Modal -->
-<div id="apiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;">
-  <div style="background:#1a1a1a;border:1px solid #2e2e2e;border-radius:16px;padding:28px;max-width:360px;width:100%;">
-    <div style="font-family:'DM Mono',monospace;font-size:13px;color:#818cf8;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Setup</div>
-    <div style="font-family:'DM Sans',sans-serif;font-size:15px;color:#e8e8e8;margin-bottom:6px;font-weight:500;">Enter your Anthropic API Key</div>
-    <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#666;margin-bottom:18px;line-height:1.5;">Your key is stored only on this device and never shared. Get one at console.anthropic.com</div>
-    <input id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%;background:#0f0f0f;border:1px solid #2e2e2e;border-radius:8px;padding:12px;color:#e8e8e8;font-family:'DM Mono',monospace;font-size:12px;outline:none;margin-bottom:12px;">
-    <button onclick="submitApiKey()" style="width:100%;background:#818cf8;border:none;border-radius:8px;padding:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Save & Continue</button>
-  </div>
-</div>
-
-<div class="header" id="mainApp" style="display:none;">
+<div class="header">
   <h1>spend/log</h1>
   <span class="month" id="currentMonth"></span>
 </div>
 
-<div class="summary" style="display:none;">
-  <div class="summary-item must">
-    <div class="label">Must</div>
-    <div class="amount" id="mustTotal">$0.00</div>
-  </div>
-  <div class="summary-item nice">
-    <div class="label">Nice</div>
-    <div class="amount" id="niceTotal">$0.00</div>
-  </div>
-  <div class="summary-item cut">
-    <div class="label">Cut</div>
-    <div class="amount" id="cutTotal">$0.00</div>
-  </div>
+<div class="summary">
+  <div class="summary-item must"><div class="label">Must</div><div class="amount" id="mustTotal">€0.00</div></div>
+  <div class="summary-item nice"><div class="label">Nice</div><div class="amount" id="niceTotal">€0.00</div></div>
+  <div class="summary-item cut"><div class="label">Cut</div><div class="amount" id="cutTotal">€0.00</div></div>
 </div>
 
-<div class="input-area" style="display:none;">
+<div class="input-area">
   <div class="input-row">
     <button class="mic-btn" id="micBtn" title="Voice input">🎙️</button>
-    <textarea class="note-input" id="noteInput" placeholder="e.g. spent $5.26 on lunch, nice to have, one time, food" rows="1"></textarea>
-    <button class="send-btn" id="sendBtn" title="Log it">↑</button>
+    <textarea class="note-input" id="noteInput" placeholder="e.g. €5 coffee, nice, one time, food" rows="1"></textarea>
+    <button class="send-btn" id="sendBtn">↑</button>
   </div>
-  <div class="parsing-indicator" id="parsingIndicator">⬡ parsing...</div>
+  <div class="preview" id="preview">
+    <div class="preview-label">Tap to adjust, then confirm</div>
+    <div class="preview-row" id="previewTags"></div>
+    <button class="confirm-btn" id="confirmBtn">✓ Log this entry</button>
+  </div>
 </div>
 
-<div class="filter-bar" style="display:none;">
+<div class="copy-bar">
+  <button class="copy-btn" id="copyBtn">📋 Copy summary for Claude</button>
+</div>
+
+<div class="filter-bar">
   <button class="filter-btn active" data-sort="date">Latest</button>
   <button class="filter-btn" data-sort="amount-desc">$ High→Low</button>
   <button class="filter-btn" data-sort="amount-asc">$ Low→High</button>
@@ -375,29 +126,67 @@
   <button class="filter-btn" data-sort="recurring">Recurring</button>
 </div>
 
-<div class="entries" id="entriesList" style="display:none;"></div>
-
+<div class="entries" id="entriesList"></div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ── API Key (stored privately on device, never in code) ──────────────────────
-const STORED_KEY = 'spendlog_apikey';
-function getApiKey() { return localStorage.getItem(STORED_KEY) || ''; }
-function saveApiKey(k) { localStorage.setItem(STORED_KEY, k.trim()); }
-
 const CATEGORIES = ['Food','Fun','Transportation','Bills','Rent','Travel','Gifts','Mistakes','Other'];
-const PRIORITY_MAP = { must: 'must', nice: 'nice', cut: 'cut' };
 
+// ── Keyword parser (fully offline) ────────────────────────────────────────────
+function parseNote(text) {
+  const t = text.toLowerCase();
+
+  // Amount: find €/$/£ followed by number, or plain number with decimal
+  let amount = 0;
+  const amtMatch = t.match(/[€$£]?\s*(\d+(?:[.,]\d{1,2})?)/);
+  if (amtMatch) amount = parseFloat(amtMatch[1].replace(',', '.'));
+
+  // Description: remove amount, currency, keywords — what's left
+  let desc = text
+    .replace(/[€$£]\s*\d+(?:[.,]\d{1,2})?/g, '')
+    .replace(/\d+(?:[.,]\d{1,2})?\s*(?:euro|euros|eur|usd|dollars?)?/gi, '')
+    .replace(/\b(must|need|essential|necessary|nice|optional|treat|cut|waste|unnecessary|mistake|one.?time|once|single|recurring|repeat|monthly|weekly|daily|every|food|fun|transport(?:ation)?|bills?|rent|travel|gift|gifts|mistakes?|other|spent?|spend|on|a|an|the|it|was|is)\b/gi, '')
+    .replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!desc) desc = 'Purchase';
+
+  // Priority
+  let priority = 'nice';
+  if (/\b(must|need|essential|necessary|required|have to|important)\b/.test(t)) priority = 'must';
+  else if (/\b(cut|waste|wasteful|unnecessary|regret|mistake|shouldn't|should not|didn't need|don't need)\b/.test(t)) priority = 'cut';
+  else if (/\b(nice|optional|treat|want|luxury|splurge)\b/.test(t)) priority = 'nice';
+
+  // Recurrence
+  let recurrence = 'one-time';
+  if (/\b(recurring|repeat|monthly|weekly|daily|every|subscription|sub|regular|again)\b/.test(t)) recurrence = 'recurring';
+
+  // Category — keyword map
+  let category = 'Other';
+  const catMap = [
+    ['Food',           /\b(food|eat|lunch|dinner|breakfast|meal|coffee|cafe|restaurant|groceries|grocery|snack|drink|drinks|beverage|takeaway|takeout|pizza|burger|sandwich|beer|wine|pub|bar)\b/],
+    ['Fun',            /\b(fun|entertainment|game|games|movie|cinema|netflix|spotify|music|concert|hobby|sport|gym|club|party|event|ticket)\b/],
+    ['Transportation', /\b(transport|taxi|uber|lyft|bus|train|metro|fuel|petrol|gas|parking|toll|flight|fare|car|bike|scooter)\b/],
+    ['Bills',          /\b(bill|bills|electric|electricity|water|internet|phone|mobile|insurance|broadband|utility|utilities|council|tax)\b/],
+    ['Rent',           /\b(rent|mortgage|landlord|accommodation|housing)\b/],
+    ['Travel',         /\b(travel|hotel|airbnb|holiday|vacation|trip|flight|airport|luggage|suitcase)\b/],
+    ['Gifts',          /\b(gift|gifts|present|birthday|christmas|flowers|donation)\b/],
+    ['Mistakes',       /\b(mistake|mistakes|regret|wasted|oops|accident|accidental|wrong)\b/],
+  ];
+  for (const [cat, re] of catMap) {
+    if (re.test(t)) { category = cat; break; }
+  }
+
+  return { amount, description: desc || 'Purchase', priority, recurrence, category };
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
 let entries = JSON.parse(localStorage.getItem('spendlog_entries') || '[]');
 let currentSort = 'date';
+let pendingEntry = null;
 
-// Month label
 document.getElementById('currentMonth').textContent =
   new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
 
-function save() {
-  localStorage.setItem('spendlog_entries', JSON.stringify(entries));
-}
+function save() { localStorage.setItem('spendlog_entries', JSON.stringify(entries)); }
 
 function showToast(msg, duration = 2500) {
   const t = document.getElementById('toast');
@@ -406,99 +195,117 @@ function showToast(msg, duration = 2500) {
   setTimeout(() => t.classList.remove('show'), duration);
 }
 
-// ── AI parsing ──────────────────────────────────────────────────────────────
-async function parseNote(text) {
-  const prompt = `You are a spending log parser. Parse the user's note into structured data.
-
-Categories available: Food, Fun, Transportation, Bills, Rent, Travel, Gifts, Mistakes, Other
-
-Return ONLY valid JSON (no markdown, no extra text) in this exact format:
-{
-  "amount": 5.26,
-  "description": "lunch",
-  "priority": "nice",
-  "recurrence": "one-time",
-  "category": "Food"
+// ── Preview UI ────────────────────────────────────────────────────────────────
+function showPreview(parsed) {
+  pendingEntry = { ...parsed, id: Date.now() };
+  const preview = document.getElementById('preview');
+  preview.style.display = 'block';
+  renderPreviewTags();
 }
 
-Rules:
-- amount: number, extract the numeric value only (support €, $, £ or no symbol)
-- description: short phrase of what was purchased
-- priority: exactly one of "must", "nice", or "cut"
-  - "must" = essential/necessary/need
-  - "nice" = nice to have/want/optional treat
-  - "cut" = could cut/unnecessary/wasteful/mistake
-- recurrence: exactly "one-time" or "recurring"
-- category: best match from the list above
+function renderPreviewTags() {
+  const e = pendingEntry;
+  const container = document.getElementById('previewTags');
 
-User note: "${text}"`;
+  // Priority toggle
+  const priorities = ['must','nice','cut'];
+  const prioTags = priorities.map(p =>
+    `<span class="ptag ${e.priority===p?'active-'+p:''}" onclick="togglePriority('${p}')">${p}</span>`
+  ).join('');
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
+  // Recurrence toggle
+  const recTags = ['one-time','recurring'].map(r =>
+    `<span class="ptag ${e.recurrence===r?'active-rec':''}" onclick="toggleRecur('${r}')">${r==='one-time'?'1×':'↺ recurring'}</span>`
+  ).join('');
 
-  const data = await res.json();
-  const raw = data.content?.[0]?.text || '';
-  // Strip any markdown fences just in case
-  const clean = raw.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
+  // Category toggle
+  const catTags = CATEGORIES.map(c =>
+    `<span class="ptag ${e.category===c?'active-cat':''}" onclick="toggleCat('${c}')">${c}</span>`
+  ).join('');
+
+  container.innerHTML = `
+    <div style="width:100%;margin-bottom:6px;">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Priority</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${prioTags}</div>
+    </div>
+    <div style="width:100%;margin-bottom:6px;">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Frequency</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${recTags}</div>
+    </div>
+    <div style="width:100%;">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Category</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">${catTags}</div>
+    </div>
+  `;
 }
 
-// ── Render ───────────────────────────────────────────────────────────────────
+function togglePriority(p) { pendingEntry.priority = p; renderPreviewTags(); }
+function toggleRecur(r) { pendingEntry.recurrence = r; renderPreviewTags(); }
+function toggleCat(c) { pendingEntry.category = c; renderPreviewTags(); }
+
+function confirmEntry() {
+  if (!pendingEntry) return;
+  entries.unshift(pendingEntry);
+  save();
+  pendingEntry = null;
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('noteInput').value = '';
+  document.getElementById('noteInput').style.height = 'auto';
+  render();
+  showToast(`✓ Logged €${entries[0].amount.toFixed(2)} · ${entries[0].category}`);
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+function submitNote() {
+  const input = document.getElementById('noteInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const parsed = parseNote(text);
+  showPreview(parsed);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
 function getSorted() {
   let list = [...entries];
   if (currentSort === 'amount-desc') list.sort((a,b) => b.amount - a.amount);
   else if (currentSort === 'amount-asc') list.sort((a,b) => a.amount - b.amount);
-  else if (currentSort === 'must') list = list.filter(e => e.priority === 'must').sort((a,b) => b.amount - a.amount);
-  else if (currentSort === 'nice') list = list.filter(e => e.priority === 'nice').sort((a,b) => b.amount - a.amount);
-  else if (currentSort === 'cut') list = list.filter(e => e.priority === 'cut').sort((a,b) => b.amount - a.amount);
-  else if (currentSort === 'recurring') list = list.filter(e => e.recurrence === 'recurring').sort((a,b) => b.amount - a.amount);
-  else list.sort((a,b) => b.id - a.id); // date
+  else if (currentSort === 'must') list = list.filter(e => e.priority==='must').sort((a,b) => b.amount-a.amount);
+  else if (currentSort === 'nice') list = list.filter(e => e.priority==='nice').sort((a,b) => b.amount-a.amount);
+  else if (currentSort === 'cut')  list = list.filter(e => e.priority==='cut').sort((a,b) => b.amount-a.amount);
+  else if (currentSort === 'recurring') list = list.filter(e => e.recurrence==='recurring').sort((a,b) => b.amount-a.amount);
+  else list.sort((a,b) => b.id - a.id);
   return list;
 }
 
 function render() {
-  const list = getSorted();
-
-  // Totals (always from all entries)
   const must = entries.filter(e=>e.priority==='must').reduce((s,e)=>s+e.amount,0);
   const nice = entries.filter(e=>e.priority==='nice').reduce((s,e)=>s+e.amount,0);
   const cut  = entries.filter(e=>e.priority==='cut').reduce((s,e)=>s+e.amount,0);
-  document.getElementById('mustTotal').textContent = '€' + must.toFixed(2);
-  document.getElementById('niceTotal').textContent = '€' + nice.toFixed(2);
-  document.getElementById('cutTotal').textContent  = '€' + cut.toFixed(2);
+  document.getElementById('mustTotal').textContent = '€'+must.toFixed(2);
+  document.getElementById('niceTotal').textContent = '€'+nice.toFixed(2);
+  document.getElementById('cutTotal').textContent  = '€'+cut.toFixed(2);
 
+  const list = getSorted();
   const container = document.getElementById('entriesList');
-
   if (list.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="icon">🧾</div>
-      <p>No entries yet.<br>Type or speak a purchase above.</p>
-    </div>`;
+    container.innerHTML = `<div class="empty-state"><div class="icon">🧾</div><p>No entries yet.<br>Type or speak a purchase above.</p></div>`;
     return;
   }
-
   container.innerHTML = list.map(e => `
     <div class="entry" data-id="${e.id}">
       <div class="entry-priority">
         <div class="priority-dot ${e.priority}"></div>
-        <span class="recur-tag">${e.recurrence === 'recurring' ? '↺' : '1×'}</span>
+        <span class="recur-tag">${e.recurrence==='recurring'?'↺':'1×'}</span>
       </div>
       <div class="entry-body">
         <div class="entry-desc">${e.description}</div>
         <div class="entry-meta">
-          <span class="tag priority-label">${e.priority === 'must' ? 'Must' : e.priority === 'nice' ? 'Nice' : 'Cut'}</span>
+          <span class="tag">${e.priority==='must'?'Must':e.priority==='nice'?'Nice':'Cut'}</span>
           <span class="tag">${e.recurrence}</span>
           <span class="tag category">${e.category}</span>
         </div>
       </div>
-      <div class="entry-amount">$${e.amount.toFixed(2)}</div>
+      <div class="entry-amount">€${e.amount.toFixed(2)}</div>
       <button class="delete-btn" onclick="deleteEntry(${e.id})">✕</button>
     </div>
   `).join('');
@@ -506,99 +313,65 @@ function render() {
 
 function deleteEntry(id) {
   entries = entries.filter(e => e.id !== id);
-  save();
-  render();
+  save(); render();
 }
 
-// ── Submit ────────────────────────────────────────────────────────────────────
-async function submitNote() {
-  const input = document.getElementById('noteInput');
-  const text = input.value.trim();
-  if (!text) return;
+// ── Copy for Claude ───────────────────────────────────────────────────────────
+document.getElementById('copyBtn').addEventListener('click', () => {
+  if (entries.length === 0) { showToast('No entries to copy yet'); return; }
+  const month = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+  const must = entries.filter(e=>e.priority==='must').reduce((s,e)=>s+e.amount,0);
+  const nice = entries.filter(e=>e.priority==='nice').reduce((s,e)=>s+e.amount,0);
+  const cut  = entries.filter(e=>e.priority==='cut').reduce((s,e)=>s+e.amount,0);
+  const total = must + nice + cut;
 
-  const sendBtn = document.getElementById('sendBtn');
-  const indicator = document.getElementById('parsingIndicator');
+  const lines = entries.map(e =>
+    `- €${e.amount.toFixed(2)} | ${e.description} | ${e.priority} | ${e.recurrence} | ${e.category}`
+  ).join('\n');
 
-  sendBtn.disabled = true;
-  indicator.style.display = 'block';
+  const summary = `My spending log for ${month}:\n\nTotal: €${total.toFixed(2)}\nMust-haves: €${must.toFixed(2)}\nNice-to-haves: €${nice.toFixed(2)}\nCan cut: €${cut.toFixed(2)}\n\nEntries:\n${lines}`;
 
-  try {
-    const parsed = await parseNote(text);
+  navigator.clipboard.writeText(summary).then(() => {
+    showToast('✓ Copied! Paste into Claude for analysis');
+  }).catch(() => {
+    showToast('Copy failed — try on desktop');
+  });
+});
 
-    const entry = {
-      id: Date.now(),
-      amount: parseFloat(parsed.amount) || 0,
-      description: parsed.description || text,
-      priority: parsed.priority || 'nice',
-      recurrence: parsed.recurrence || 'one-time',
-      category: parsed.category || 'Other',
-      raw: text
-    };
-
-    entries.unshift(entry);
-    save();
-    input.value = '';
-    input.style.height = 'auto';
-    render();
-    showToast(`✓ Logged €${entry.amount.toFixed(2)} · ${entry.category}`);
-  } catch (err) {
-    showToast('⚠ Could not parse — try again');
-    console.error(err);
-  } finally {
-    sendBtn.disabled = false;
-    indicator.style.display = 'none';
-  }
-}
-
-// ── Voice input ───────────────────────────────────────────────────────────────
-let recognition = null;
+// ── Voice ─────────────────────────────────────────────────────────────────────
 const micBtn = document.getElementById('micBtn');
-
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SR();
+  const recognition = new SR();
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.lang = 'en-US';
-
   recognition.onresult = (e) => {
-    const transcript = e.results[0][0].transcript;
-    document.getElementById('noteInput').value = transcript;
+    document.getElementById('noteInput').value = e.results[0][0].transcript;
     micBtn.classList.remove('recording');
     submitNote();
   };
   recognition.onend = () => micBtn.classList.remove('recording');
-  recognition.onerror = () => {
-    micBtn.classList.remove('recording');
-    showToast('Microphone error — type instead');
-  };
-
+  recognition.onerror = () => { micBtn.classList.remove('recording'); showToast('Mic error — type instead'); };
   micBtn.addEventListener('click', () => {
-    if (micBtn.classList.contains('recording')) {
-      recognition.stop();
-    } else {
-      micBtn.classList.add('recording');
-      recognition.start();
-    }
+    if (micBtn.classList.contains('recording')) { recognition.stop(); }
+    else { micBtn.classList.add('recording'); recognition.start(); }
   });
 } else {
-  micBtn.title = 'Voice not supported — type instead';
   micBtn.style.opacity = '0.4';
+  micBtn.title = 'Voice not supported — type instead';
 }
 
 // ── Events ────────────────────────────────────────────────────────────────────
 document.getElementById('sendBtn').addEventListener('click', submitNote);
-
+document.getElementById('confirmBtn').addEventListener('click', confirmEntry);
 document.getElementById('noteInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitNote(); }
 });
-
-// Auto-resize textarea
 document.getElementById('noteInput').addEventListener('input', function() {
   this.style.height = 'auto';
   this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
-
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -608,32 +381,7 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-function initApp() {
-  const key = getApiKey();
-  if (!key) {
-    document.getElementById('apiModal').style.display = 'flex';
-  } else {
-    document.getElementById('apiModal').style.display = 'none';
-    document.getElementById('mainApp').style.display = '';
-    // Show rest of app
-    document.querySelectorAll('.summary, .input-area, .filter-bar, .entries').forEach(el => el.style.display = '');
-    render();
-  }
-}
-
-function submitApiKey() {
-  const val = document.getElementById('apiKeyInput').value.trim();
-  if (!val.startsWith('sk-ant')) {
-    alert('That doesn\'t look like a valid key. It should start with sk-ant...');
-    return;
-  }
-  saveApiKey(val);
-  initApp();
-}
-
-// Initial render
-initApp();
+render();
 </script>
 </body>
 </html>
