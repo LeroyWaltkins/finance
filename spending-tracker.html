@@ -324,12 +324,24 @@
 </head>
 <body>
 
-<div class="header">
+
+<!-- API Key Setup Modal -->
+<div id="apiModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:flex;align-items:center;justify-content:center;padding:24px;">
+  <div style="background:#1a1a1a;border:1px solid #2e2e2e;border-radius:16px;padding:28px;max-width:360px;width:100%;">
+    <div style="font-family:'DM Mono',monospace;font-size:13px;color:#818cf8;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Setup</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:15px;color:#e8e8e8;margin-bottom:6px;font-weight:500;">Enter your Anthropic API Key</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:12px;color:#666;margin-bottom:18px;line-height:1.5;">Your key is stored only on this device and never shared. Get one at console.anthropic.com</div>
+    <input id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." style="width:100%;background:#0f0f0f;border:1px solid #2e2e2e;border-radius:8px;padding:12px;color:#e8e8e8;font-family:'DM Mono',monospace;font-size:12px;outline:none;margin-bottom:12px;">
+    <button onclick="submitApiKey()" style="width:100%;background:#818cf8;border:none;border-radius:8px;padding:12px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;">Save & Continue</button>
+  </div>
+</div>
+
+<div class="header" id="mainApp" style="display:none;">
   <h1>spend/log</h1>
   <span class="month" id="currentMonth"></span>
 </div>
 
-<div class="summary">
+<div class="summary" style="display:none;">
   <div class="summary-item must">
     <div class="label">Must</div>
     <div class="amount" id="mustTotal">$0.00</div>
@@ -344,7 +356,7 @@
   </div>
 </div>
 
-<div class="input-area">
+<div class="input-area" style="display:none;">
   <div class="input-row">
     <button class="mic-btn" id="micBtn" title="Voice input">🎙️</button>
     <textarea class="note-input" id="noteInput" placeholder="e.g. spent $5.26 on lunch, nice to have, one time, food" rows="1"></textarea>
@@ -353,7 +365,7 @@
   <div class="parsing-indicator" id="parsingIndicator">⬡ parsing...</div>
 </div>
 
-<div class="filter-bar">
+<div class="filter-bar" style="display:none;">
   <button class="filter-btn active" data-sort="date">Latest</button>
   <button class="filter-btn" data-sort="amount-desc">$ High→Low</button>
   <button class="filter-btn" data-sort="amount-asc">$ Low→High</button>
@@ -363,11 +375,16 @@
   <button class="filter-btn" data-sort="recurring">Recurring</button>
 </div>
 
-<div class="entries" id="entriesList"></div>
+<div class="entries" id="entriesList" style="display:none;"></div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+// ── API Key (stored privately on device, never in code) ──────────────────────
+const STORED_KEY = 'spendlog_apikey';
+function getApiKey() { return localStorage.getItem(STORED_KEY) || ''; }
+function saveApiKey(k) { localStorage.setItem(STORED_KEY, k.trim()); }
+
 const CATEGORIES = ['Food','Fun','Transportation','Bills','Rent','Travel','Gifts','Mistakes','Other'];
 const PRIORITY_MAP = { must: 'must', nice: 'nice', cut: 'cut' };
 
@@ -405,7 +422,7 @@ Return ONLY valid JSON (no markdown, no extra text) in this exact format:
 }
 
 Rules:
-- amount: number, dollars (extract from text)
+- amount: number, extract the numeric value only (support €, $, £ or no symbol)
 - description: short phrase of what was purchased
 - priority: exactly one of "must", "nice", or "cut"
   - "must" = essential/necessary/need
@@ -418,7 +435,7 @@ User note: "${text}"`;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 300,
@@ -453,9 +470,9 @@ function render() {
   const must = entries.filter(e=>e.priority==='must').reduce((s,e)=>s+e.amount,0);
   const nice = entries.filter(e=>e.priority==='nice').reduce((s,e)=>s+e.amount,0);
   const cut  = entries.filter(e=>e.priority==='cut').reduce((s,e)=>s+e.amount,0);
-  document.getElementById('mustTotal').textContent = '$' + must.toFixed(2);
-  document.getElementById('niceTotal').textContent = '$' + nice.toFixed(2);
-  document.getElementById('cutTotal').textContent  = '$' + cut.toFixed(2);
+  document.getElementById('mustTotal').textContent = '€' + must.toFixed(2);
+  document.getElementById('niceTotal').textContent = '€' + nice.toFixed(2);
+  document.getElementById('cutTotal').textContent  = '€' + cut.toFixed(2);
 
   const container = document.getElementById('entriesList');
 
@@ -523,7 +540,7 @@ async function submitNote() {
     input.value = '';
     input.style.height = 'auto';
     render();
-    showToast(`✓ Logged $${entry.amount.toFixed(2)} · ${entry.category}`);
+    showToast(`✓ Logged €${entry.amount.toFixed(2)} · ${entry.category}`);
   } catch (err) {
     showToast('⚠ Could not parse — try again');
     console.error(err);
@@ -591,8 +608,32 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
+// ── Init ─────────────────────────────────────────────────────────────────────
+function initApp() {
+  const key = getApiKey();
+  if (!key) {
+    document.getElementById('apiModal').style.display = 'flex';
+  } else {
+    document.getElementById('apiModal').style.display = 'none';
+    document.getElementById('mainApp').style.display = '';
+    // Show rest of app
+    document.querySelectorAll('.summary, .input-area, .filter-bar, .entries').forEach(el => el.style.display = '');
+    render();
+  }
+}
+
+function submitApiKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (!val.startsWith('sk-ant')) {
+    alert('That doesn\'t look like a valid key. It should start with sk-ant...');
+    return;
+  }
+  saveApiKey(val);
+  initApp();
+}
+
 // Initial render
-render();
+initApp();
 </script>
 </body>
 </html>
