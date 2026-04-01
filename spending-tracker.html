@@ -84,6 +84,26 @@
   .copy-bar { padding: 10px 16px; border-bottom: 1px solid var(--border); }
   .copy-btn { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); cursor: pointer; transition: all 0.15s; }
   .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+  /* Edit modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:200; align-items:flex-end; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border); border-radius:16px 16px 0 0; padding:24px; width:100%; max-width:480px; }
+  .modal-title { font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:16px; }
+  .modal-field { margin-bottom:14px; }
+  .modal-field label { font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); display:block; margin-bottom:6px; }
+  .modal-field input { width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--text); font-family:var(--sans); font-size:15px; outline:none; }
+  .modal-field input:focus { border-color:var(--accent); }
+  .modal-toggle-row { display:flex; gap:6px; flex-wrap:wrap; }
+  .modal-toggle { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:0.8px; padding:5px 12px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--muted); cursor:pointer; transition:all 0.15s; }
+  .modal-toggle.sel-must { color:var(--must); border-color:var(--must); background:#052e16; }
+  .modal-toggle.sel-nice { color:var(--nice); border-color:var(--nice); background:#2d1f02; }
+  .modal-toggle.sel-cut  { color:var(--cut);  border-color:var(--cut);  background:#2d0a0a; }
+  .modal-toggle.sel-rec  { color:#67e8f9; border-color:#67e8f9; background:#0a1f2d; }
+  .modal-toggle.sel-cat  { color:var(--accent); border-color:var(--accent); background:#1e1b4b; }
+  .modal-actions { display:flex; gap:8px; margin-top:18px; }
+  .modal-save { flex:1; background:var(--accent); border:none; border-radius:8px; padding:12px; color:#fff; font-family:var(--sans); font-size:14px; font-weight:500; cursor:pointer; }
+  .modal-cancel { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:12px 18px; color:var(--muted); font-family:var(--sans); font-size:14px; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -292,7 +312,7 @@ function render() {
     return;
   }
   container.innerHTML = list.map(e => `
-    <div class="entry" data-id="${e.id}">
+    <div class="entry" data-id="${e.id}" onclick="openEdit(${e.id})" style="cursor:pointer;">
       <div class="entry-priority">
         <div class="priority-dot ${e.priority}"></div>
         <span class="recur-tag">${e.recurrence==='recurring'?'↺':'1×'}</span>
@@ -383,5 +403,36 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 
 render();
 </script>
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Edit entry</div>
+    <div class="modal-field">
+      <label>Description</label>
+      <input type="text" id="editDesc">
+    </div>
+    <div class="modal-field">
+      <label>Amount (€)</label>
+      <input type="number" id="editAmount" step="0.01" min="0">
+    </div>
+    <div class="modal-field">
+      <label>Priority</label>
+      <div class="modal-toggle-row" id="editPriority"></div>
+    </div>
+    <div class="modal-field">
+      <label>Frequency</label>
+      <div class="modal-toggle-row" id="editRecur"></div>
+    </div>
+    <div class="modal-field">
+      <label>Category</label>
+      <div class="modal-toggle-row" id="editCat"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEdit()">Cancel</button>
+      <button class="modal-save" onclick="saveEdit()">Save changes</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
