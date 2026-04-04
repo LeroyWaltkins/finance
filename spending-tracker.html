@@ -157,54 +157,54 @@ const CATEGORIES = ['Food','Fun','Transportation','Bills','Rent','Travel','Gifts
 function parseNote(text) {
   const t = text.toLowerCase();
 
-  // Amount parsing — supports:
-  // "2.50", "2,50", "€2.50" → decimal
-  // "2 euros 50" / "2 euro 50 cents" → split
-  // "two fifty" / "9 fifty" → X.50 only if said with currency context or cents word
-  // plain "5" → integer
-  let amount = 0;
+  // Word-number conversion (fixes voice input: "five euros fifty" → "5 euros 50")
+  const W2N = {
+    'zero':0,'one':1,'two':2,'three':3,'four':4,'five':5,'six':6,'seven':7,
+    'eight':8,'nine':9,'ten':10,'eleven':11,'twelve':12,'thirteen':13,
+    'fourteen':14,'fifteen':15,'sixteen':16,'seventeen':17,'eighteen':18,
+    'nineteen':19,'twenty':20,'thirty':30,'forty':40,'fifty':50,
+    'sixty':60,'seventy':70,'eighty':80,'ninety':90
+  };
+  // Compound tens first: "twenty-five" / "twenty five" → 25
+  let tn = t.replace(/\b(twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)[- ](one|two|three|four|five|six|seven|eight|nine)\b/g,
+    (_, tens, ones) => W2N[tens] + W2N[ones]);
+  // Single word-numbers → digits
+  tn = tn.replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/g, m => W2N[m]);
 
-  // 1. Decimal with optional currency symbol: €2.50 or 2.50 or 2,50
-  const decMatch = t.match(/[€$£]?\s*(\d+)[.,](\d{1,2})/);
-  if (decMatch) {
-    amount = parseFloat(decMatch[1] + '.' + decMatch[2]);
+  let amount = 0, m;
+
+  // 1. Currency symbol + decimal: €8.54  €2,50  $3.99  £1.50
+  if (m = tn.match(/[€$£]\s*(\d+)[.,](\d{1,2})/))
+    amount = parseFloat(m[1] + '.' + m[2]);
+
+  // 2. Decimal number without symbol: 8.54  2,50
+  if (!amount && (m = tn.match(/\b(\d+)[.,](\d{1,2})\b/)))
+    amount = parseFloat(m[1] + '.' + m[2]);
+
+  // 3. Currency symbol + integer: €5  €20  (symbol before number — common typed pattern)
+  if (!amount && (m = tn.match(/[€$£]\s*(\d+)/)))
+    amount = parseInt(m[1]);
+
+  // 4. Integer + euro word + optional cents: "5 euros"  "3 euro 50"  "5 euro 50 cents"
+  if (!amount && (m = tn.match(/(\d+)\s*(?:euros?|€)(?:\s+(\d{1,2})(?:\s*cents?)?)?/)))
+    amount = parseInt(m[1]) + (m[2] ? parseInt(m[2]) / 100 : 0);
+
+  // 5. Two-part X YY — voice "two fifty" → tn "2 50"; treat as euros.cents when YY < 100
+  if (!amount && (m = tn.match(/\b(\d+)\s+(\d{2})\b/))) {
+    const cents = parseInt(m[2]);
+    if (cents < 100) amount = parseInt(m[1]) + cents / 100;
   }
 
-  // 2. "X euro(s) Y" or "X euro(s) Y cent(s)" — explicit split
-  if (!amount) {
-    const splitMatch = t.match(/(\d+)\s*(?:euros?|€)\s*(\d+)?(?:\s*cents?)?/);
-    if (splitMatch) {
-      const euros = parseInt(splitMatch[1]) || 0;
-      const cents = splitMatch[2] ? parseInt(splitMatch[2]) : 0;
-      amount = euros + cents / 100;
-    }
-  }
+  // 6. Plain integer fallback
+  if (!amount && (m = tn.match(/\b(\d+)\b/)))
+    amount = parseInt(m[1]);
 
-  // 3. "X fifty/cents" — only treat as X.50 if "cent" word present or currency mentioned nearby
-  if (!amount) {
-    const hasCurrencyContext = /euro|€|cent/.test(t);
-    const twoPartMatch = t.match(/(\d+)\s+(fifty|twenty|thirty|forty|sixty|seventy|eighty|ninety|\d{2})/);
-    if (twoPartMatch && hasCurrencyContext) {
-      const euros = parseInt(twoPartMatch[1]);
-      const cents = twoPartMatch[2] === 'fifty' ? 50 : twoPartMatch[2] === 'twenty' ? 20 :
-                    twoPartMatch[2] === 'thirty' ? 30 : twoPartMatch[2] === 'forty' ? 40 :
-                    twoPartMatch[2] === 'sixty' ? 60 : twoPartMatch[2] === 'seventy' ? 70 :
-                    twoPartMatch[2] === 'eighty' ? 80 : twoPartMatch[2] === 'ninety' ? 90 :
-                    parseInt(twoPartMatch[2]);
-      if (cents < 100) amount = euros + cents / 100;
-    }
-  }
-
-  // 4. Plain integer fallback
-  if (!amount) {
-    const intMatch = t.match(/(\d+)/);
-    if (intMatch) amount = parseInt(intMatch[1]);
-  }
-
-  // Description: remove amount, currency, keywords — what's left
+  // Description: strip amounts, lone currency words, word-numbers, and noise keywords
   let desc = text
     .replace(/[€$£]\s*\d+(?:[.,]\d{1,2})?/g, '')
     .replace(/\d+(?:[.,]\d{1,2})?\s*(?:euros?|eur|usd|dollars?|cents?)?/gi, '')
+    .replace(/\b(?:euros?|cents?|eur)\b/gi, '')
+    .replace(/\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\b/gi, '')
     .replace(/\b(must|need|essential|necessary|nice|optional|treat|cut|waste|unnecessary|mistake|one.?time|once|single|recurring|repeat|monthly|weekly|daily|every|food|fun|transport(?:ation)?|bills?|rent|travel|gift|gifts|mistakes?|other|spent?|spend|on|a|an|the|it|was|is|to|have|had|got|get|bought|buy|for|my|me)\b/gi, '')
     .replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
   if (!desc) desc = 'Purchase';
@@ -219,7 +219,7 @@ function parseNote(text) {
   let recurrence = 'one-time';
   if (/\b(recurring|repeat|monthly|weekly|daily|every|subscription|sub|regular|again)\b/.test(t)) recurrence = 'recurring';
 
-  // Category — keyword map
+  // Category
   let category = 'Other';
   const catMap = [
     ['Food',           /\b(food|eat|lunch|dinner|breakfast|meal|coffee|cafe|restaurant|groceries|grocery|snack|drink|drinks|beverage|takeaway|takeout|pizza|burger|sandwich|beer|wine|pub|bar)\b/],
